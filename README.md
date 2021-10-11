@@ -7,7 +7,20 @@ cd live-currency
 ```
 
 
-# React web app
+# React web app for friend list
+
+```javascript
+cd friend-list
+npm i
+npm start
+
+# See UI on
+http://localhost:3000
+
+```
+
+
+# React web app e commerce website in different currency
 
 ```javascript
 cd ui
