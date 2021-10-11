@@ -26,6 +26,8 @@ const itemsList = [
     price: 62000
   }
 ];
+const SupportedCurrency = 'INR,USD,AUD';
+const defaultCurrency = 'EUR'
 
 function formatCurrency(amount, currency){
   return new Intl.NumberFormat('en-US', {
@@ -39,7 +41,10 @@ function formatCurrency(amount, currency){
 
 function App() {
   const [items, setItems] = useState(itemsList);
-  const [currency , setCurrency] = useState('INR');
+  const [currency , setCurrency] = useState(defaultCurrency);
+  const [currentRates, setCurrentRates] = useState({});
+  const [isError, setError] = useState(false)
+
 
   const handleChange = (event)=>{
     setCurrency(event.target.value)
@@ -52,50 +57,104 @@ function App() {
         price: formatCurrency(item.price, currency)
       }
     })
-    setItems(result);
+   return result;
   }
 
   const processItemsPriceMemo = useCallback(() => processItemsPrice(itemsList, currency), [currency]);
 
+  //base in INR
+
+
+  // useEffect(() => {
+  //   const fetchData = async () => {
+  //     const response = await fetch(`${BASE_URL}/v1/latest?access_key=${ACCESS_KEY}&format=1&symbols=INR`)
+  //     .then(response => response.json()).then(data => data);
+  //     const result = itemsList.map((item)=>{
+  //       return {
+  //         ...item,
+  //         price: formatCurrency(item.price / response.rates['INR'], currency)
+  //       }
+  //     })
+  //     setItems(result);
+  //   }
+
+  //   currency !== 'INR' ?  fetchData() : processItemsPriceMemo(currency);
+
+  // }, [currency]);
+
+
   useEffect(() => {
-    const fetchData = async () => {
-      const response = await fetch(`${BASE_URL}/v1/latest?access_key=${ACCESS_KEY}&format=1&symbols=INR`)
-      .then(response => response.json()).then(data => data);
+    const fetchData = () => {
+      // const response = await fetch(`${BASE_URL}/v1/latest?access_key=${ACCESS_KEY}&format=1&symbols=${currency}`)
+      // .then(response => response.json()).then(data => data);
+      // console.log('response: ', response);
+
       const result = itemsList.map((item)=>{
         return {
           ...item,
-          price: formatCurrency(item.price / response.rates['INR'], currency)
+          price: formatCurrency(item.price * currentRates[currency], currency)
         }
       })
       setItems(result);
     }
 
-    currency !== 'INR' ?  fetchData() : processItemsPriceMemo(currency);
+    if(currency !== defaultCurrency) {
+      fetchData()
+    } else {
+     const result=  processItemsPriceMemo(currency);
+     console.log('result: ', result);
+     setItems(result);
+    }
 
   }, [currency]);
+
+
+  useEffect(()=>{
+    const fetchCurrentRates = async() => {
+      fetch(`${BASE_URL}/v1/latest?access_key=${ACCESS_KEY}&format=1&symbols=${SupportedCurrency}`)
+      .then(response => response.json()).then(data => {
+        console.log('data: ', data);
+        setCurrentRates(data.rates)
+      }).catch((err)=>{
+        console.log('err: ', err);
+        setError(true)
+      });
+    }
+
+    fetchCurrentRates();
+  },[])
 
   return (
     <>
     <div className={'dropdown'}>
         <span>{"Currency "}</span>
+
         <select value={currency} onChange={handleChange}>
           <option value="INR">INR</option>
           <option value="EUR">EUR</option>
+          <option value="USD">USD</option>
+          <option value="AUD">AUD</option>
         </select>
       </div>
       <div className="row">
        {
+        !isError
+        ?
         items.map((item)=>{
           return(
-            <div className="column">
-            <div key={item.title} className="card">
-              <h3>{item.title}</h3>
-              <img className="image" alt={item.title}  src={item.img}></img>
-              <p>{item.price}</p>
-            </div>
+            <div key={item.title} className="column">
+              <div key={item.title} className="card">
+                <h3>{item.title}</h3>
+                <img className="image" alt={item.title}  src={item.img}></img>
+                <p>{item.price}</p>
+              </div>
             </div>
           )
         })
+        :
+        (
+          <div>{"Something is down"}</div>
+        )
       }
     </div>
     </>

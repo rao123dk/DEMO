@@ -9,7 +9,7 @@ async function getCampaignsAPI() {
       } catch (error) {
         console.error(error);
       }
-   return
+      //return
 }
 
 module.exports = { getCampaignsAPI };
