@@ -2,7 +2,7 @@
 #
 ```javascript
 git clone https://github.com/rao123dk/live-currency.git
-cd live-currency
+cd DEMO
 
 ```
 
